@@ -199,6 +199,11 @@ static void client_event_cb(const usb_host_client_event_msg_t *event_msg, void *
         ESP_LOGI(TAG, "USB Printer disconnected!");
         g_printer_dev.is_opened = false;
 
+        if (g_printer_dev.dev_hdl) {
+            usb_host_device_close(g_printer_dev.client_hdl, g_printer_dev.dev_hdl);
+            g_printer_dev.dev_hdl = NULL;
+        }
+
         if (g_event_cb) {
             g_event_cb(PRINTER_EVENT_DISCONNECTED);
         }
