@@ -24,6 +24,7 @@ static QueueHandle_t printer_event_queue = NULL;
 
 /* ID from card reader (mutable, updated when card is swiped) */
 static char s_id_number[16] = "-------------";
+static char s_full_name[128] = "-------------";
 
 static void printer_event_cb(printer_event_t event)
 {
@@ -105,6 +106,60 @@ static void print_format_a_task(void *arg)
     esc_pos_text(buf, &len, date_str);
     esc_pos_feed(buf, &len, 1);
 
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เครื่องตรวจวัดแอลกอฮอล์");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "รุ่น: แอลโคควอนท์ 6020+");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เฟิร์มแวร์: R1.59A TH-LT");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "047.004");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "T-WL 1.02");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "หมายเลขเครื่อง: A447059");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "******************************");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด: ");
+    esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ตรวจวัด: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ผลการตรวจวัด: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "1 mg%");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ประเภทยานพาหนะ: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "หมายเลขทะเบียน: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "สถานที่: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ถูกตรวจวัด: ");
+    esc_pos_feed(buf, &len, 2);
+
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ตรวจวัด: ");
+    esc_pos_feed(buf, &len, 2);
+
+    esc_pos_thai_text(buf, &len, "หมายเหตุ: ");
+    esc_pos_feed(buf, &len, 1);
+
     esc_pos_feed(buf, &len, 3);
     esc_pos_cut(buf, &len);
 
@@ -170,6 +225,60 @@ static void print_format_b_task(void *arg)
     esc_pos_text(buf, &len, date_str);
     esc_pos_feed(buf, &len, 1);
 
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เครื่องตรวจวัดแอลกอฮอล์");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "รุ่น: แอลโคควอนท์ 6020+");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เฟิร์มแวร์: R1.59A TH-LT");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "047.004");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "T-WL 1.02");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "หมายเลขเครื่อง: A447059");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "******************************");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด: ");
+    esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ตรวจวัด: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ผลการตรวจวัด: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_text(buf, &len, "1 mg%");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ประเภทยานพาหนะ: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "หมายเลขทะเบียน: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "สถานที่: ");
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ถูกตรวจวัด: ");
+    esc_pos_feed(buf, &len, 2);
+
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ตรวจวัด: ");
+    esc_pos_feed(buf, &len, 2);
+
+    esc_pos_thai_text(buf, &len, "หมายเหตุ: ");
+    esc_pos_feed(buf, &len, 1);
+
     esc_pos_feed(buf, &len, 3);
     esc_pos_cut(buf, &len);
 
@@ -197,6 +306,8 @@ static void on_card_read(const license_data *lic)
 
     char full_name[128];
     snprintf(full_name, sizeof(full_name), "%s %s", lic->firstname, lic->lastname);
+    strncpy(s_full_name, full_name, sizeof(s_full_name) - 1);
+    s_full_name[sizeof(s_full_name) - 1] = '\0';
 
     /* Update UI with new ID and Name */
     ui_update_id_number(s_id_number);
