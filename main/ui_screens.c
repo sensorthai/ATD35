@@ -258,6 +258,7 @@ void ui_show_scan_screen(void)
 /* ========================================================================== */
 static lv_obj_t *scr_main = NULL;
 static lv_obj_t *lbl_id_number = NULL;
+static lv_obj_t *lbl_name = NULL;
 static lv_obj_t *lbl_datetime = NULL;
 static lv_obj_t *status_dot = NULL;
 static lv_obj_t *lbl_status = NULL;
@@ -330,8 +331,8 @@ void ui_main_screen_create(void)
 
     /* --- ID Card Section --- */
     lv_obj_t *id_card = lv_obj_create(scr_main);
-    lv_obj_set_size(id_card, 290, 110);
-    lv_obj_align(id_card, LV_ALIGN_TOP_MID, 0, 40);
+    lv_obj_set_size(id_card, 450, 120);
+    lv_obj_align(id_card, LV_ALIGN_TOP_MID, 0, 35);
     lv_obj_set_style_bg_color(id_card, C_CARD, 0);
     lv_obj_set_style_border_color(id_card, C_AMBER, 0);
     lv_obj_set_style_border_width(id_card, 2, 0);
@@ -345,14 +346,21 @@ void ui_main_screen_create(void)
     lv_obj_set_style_text_color(lbl_id_title, C_DIM, 0);
     // "เลขบัตรประชาชน"
     lv_label_set_text(lbl_id_title, "\xE0\xB9\x80\xE0\xB8\xA5\xE0\xB8\x82\xE0\xB8\x9A\xE0\xB8\xB1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\x9B\xE0\xB8\xA3\xE0\xB8\xB0\xE0\xB8\x8A\xE0\xB8\xB2\xE0\xB8\x8A\xE0\xB8\x99");
-    lv_obj_align(lbl_id_title, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_align(lbl_id_title, LV_ALIGN_TOP_MID, 0, -2);
 
     /* ID number (large) */
     lbl_id_number = lv_label_create(id_card);
-    lv_obj_set_style_text_font(lbl_id_number, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_font(lbl_id_number, &lv_font_montserrat_36, 0);
     lv_obj_set_style_text_color(lbl_id_number, C_TEXT, 0);
     lv_label_set_text(lbl_id_number, "1521253654587");
-    lv_obj_align(lbl_id_number, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_align(lbl_id_number, LV_ALIGN_TOP_MID, 0, 22);
+
+    /* Name label */
+    lbl_name = lv_label_create(id_card);
+    lv_obj_set_style_text_font(lbl_name, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_color(lbl_name, C_AMBER, 0);
+    lv_label_set_text(lbl_name, "AKARADEJ PONGPANIT");
+    lv_obj_align(lbl_name, LV_ALIGN_TOP_MID, 0, 65);
 
     /* --- Date/Time display --- */
     lbl_datetime = lv_label_create(scr_main);
@@ -362,9 +370,9 @@ void ui_main_screen_create(void)
     lv_obj_align(lbl_datetime, LV_ALIGN_TOP_RIGHT, -15, 8);
 
     /* --- Two consent buttons --- */
-    // "ยินยอมเป่า" button (green)
+    // "ยินยอมตรวจวัด" button (green)
     lv_obj_t *btn_consent = lv_btn_create(scr_main);
-    lv_obj_set_size(btn_consent, 200, 55);
+    lv_obj_set_size(btn_consent, 240, 55);
     lv_obj_align(btn_consent, LV_ALIGN_CENTER, 0, 30);
     lv_obj_set_style_bg_color(btn_consent, C_GREEN, 0);
     lv_obj_set_style_radius(btn_consent, 12, 0);
@@ -373,13 +381,13 @@ void ui_main_screen_create(void)
     lv_obj_t *lbl_consent = lv_label_create(btn_consent);
     lv_obj_set_style_text_font(lbl_consent, &font_thai_24, 0);
     lv_obj_set_style_text_color(lbl_consent, C_TEXT, 0);
-    // "ยินยอมเป่า"
-    lv_label_set_text(lbl_consent, "\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB9\x80\xE0\xB8\x9B\xE0\xB9\x88\xE0\xB8\xB2");
+    // "ยินยอมตรวจวัด"
+    lv_label_set_text(lbl_consent, "\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
     lv_obj_center(lbl_consent);
 
-    // "ไม่ยินยอม" button (red)
+    // "ไม่ยินยอมตรวจวัด" button (red)
     lv_obj_t *btn_refuse = lv_btn_create(scr_main);
-    lv_obj_set_size(btn_refuse, 200, 55);
+    lv_obj_set_size(btn_refuse, 240, 55);
     lv_obj_align(btn_refuse, LV_ALIGN_CENTER, 0, 100);
     lv_obj_set_style_bg_color(btn_refuse, C_RED, 0);
     lv_obj_set_style_radius(btn_refuse, 12, 0);
@@ -388,8 +396,8 @@ void ui_main_screen_create(void)
     lv_obj_t *lbl_refuse = lv_label_create(btn_refuse);
     lv_obj_set_style_text_font(lbl_refuse, &font_thai_24, 0);
     lv_obj_set_style_text_color(lbl_refuse, C_TEXT, 0);
-    // "ไม่ยินยอม"
-    lv_label_set_text(lbl_refuse, "\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1");
+    // "ไม่ยินยอมตรวจวัด"
+    lv_label_set_text(lbl_refuse, "\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
     lv_obj_center(lbl_refuse);
 
     /* --- Message label --- */
@@ -449,6 +457,15 @@ void ui_update_id_number(const char *id)
     display_lock();
     if (lbl_id_number) {
         lv_label_set_text(lbl_id_number, id);
+    }
+    display_unlock();
+}
+
+void ui_update_name(const char *name)
+{
+    display_lock();
+    if (lbl_name) {
+        lv_label_set_text(lbl_name, name);
     }
     display_unlock();
 }

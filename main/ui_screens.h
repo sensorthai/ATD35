@@ -26,6 +26,7 @@ void ui_show_main_screen(void);
 void ui_update_printer_status(bool connected);
 void ui_show_temporary_message(const char *msg, lv_color_t color, uint32_t duration_ms);
 void ui_update_id_number(const char *id);
+void ui_update_name(const char *name);
 
 /* Callbacks from main.c */
 extern void on_time_confirmed(struct tm *t);

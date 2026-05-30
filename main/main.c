@@ -191,12 +191,16 @@ static void print_format_b_task(void *arg)
 /* ========================================================================== */
 static void on_card_read(const license_data *lic)
 {
-    ESP_LOGI(TAG, "Card read: ID=%s", lic->card_id);
+    ESP_LOGI(TAG, "Card read: ID=%s Name=%s %s", lic->card_id, lic->firstname, lic->lastname);
     strncpy(s_id_number, lic->card_id, sizeof(s_id_number) - 1);
     s_id_number[sizeof(s_id_number) - 1] = '\0';
 
-    /* Update UI with new ID */
+    char full_name[128];
+    snprintf(full_name, sizeof(full_name), "%s %s", lic->firstname, lic->lastname);
+
+    /* Update UI with new ID and Name */
     ui_update_id_number(s_id_number);
+    ui_update_name(full_name);
     ui_show_main_screen();
 }
 
