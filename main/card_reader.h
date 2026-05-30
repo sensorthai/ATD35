@@ -12,7 +12,7 @@ extern "C" {
 
 /* UART Pin Configuration */
 #define CARD_READER_TXD   (UART_PIN_NO_CHANGE)
-#define CARD_READER_RXD   (44)
+#define CARD_READER_RXD   (42)
 #define CARD_READER_RTS   (UART_PIN_NO_CHANGE)
 #define CARD_READER_CTS   (UART_PIN_NO_CHANGE)
 #define CARD_UART_PORT_NUM (UART_NUM_2)
