@@ -93,17 +93,20 @@ static void print_format_a_task(void *arg)
     esc_pos_thai_text(buf, &len, "รายงานผลการตรวจวัดปริมาณแอลกอฮอล์");
     esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด");
-    esc_pos_feed(buf, &len, 1);
+    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด : ");
     esc_pos_text(buf, &len, s_id_number);
-    esc_pos_feed(buf, &len, 2);
+    esc_pos_feed(buf, &len, 1);
 
-    esc_pos_thai_text(buf, &len, "เวลา : ");
-    esc_pos_text(buf, &len, time_str);
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+    esc_pos_thai_text(buf, &len, s_full_name);
     esc_pos_feed(buf, &len, 1);
 
     esc_pos_thai_text(buf, &len, "วันที่ : ");
     esc_pos_text(buf, &len, date_str);
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เวลา : ");
+    esc_pos_text(buf, &len, time_str);
     esc_pos_feed(buf, &len, 1);
 
     esc_pos_feed(buf, &len, 1);
@@ -206,23 +209,26 @@ static void print_format_b_task(void *arg)
     esc_pos_thai_text(buf, &len, "รายงานผลการตรวจวัดปริมาณแอลกอฮอล์");
     esc_pos_feed(buf, &len, 1);
 
-    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด");
-    esc_pos_feed(buf, &len, 1);
+    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด : ");
     esc_pos_text(buf, &len, s_id_number);
-    esc_pos_feed(buf, &len, 2);
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+    esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_feed(buf, &len, 1);
 
     esc_pos_thai_text(buf, &len, "ผู้ถูกตรวจวัด ");
     esc_pos_text(buf, &len, "**** ");
-    esc_pos_thai_text(buf, &len, "ไม่ยินยอมเป่า");
+    esc_pos_thai_text(buf, &len, "ไม่ยินยอมตรวจวัด");
     esc_pos_text(buf, &len, " ****");
     esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "เวลา : ");
-    esc_pos_text(buf, &len, time_str);
-    esc_pos_feed(buf, &len, 1);
-
     esc_pos_thai_text(buf, &len, "วันที่ : ");
     esc_pos_text(buf, &len, date_str);
+    esc_pos_feed(buf, &len, 1);
+
+    esc_pos_thai_text(buf, &len, "เวลา : ");
+    esc_pos_text(buf, &len, time_str);
     esc_pos_feed(buf, &len, 1);
 
     esc_pos_feed(buf, &len, 1);
