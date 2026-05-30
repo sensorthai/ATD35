@@ -357,9 +357,9 @@ void ui_main_screen_create(void)
     /* --- Date/Time display --- */
     lbl_datetime = lv_label_create(scr_main);
     lv_obj_set_style_text_font(lbl_datetime, &lv_font_montserrat_16, 0);
-    lv_obj_set_style_text_color(lbl_datetime, C_DIM, 0);
+    lv_obj_set_style_text_color(lbl_datetime, C_TEXT, 0);
     lv_label_set_text(lbl_datetime, "--:--:--  --/--/----");
-    lv_obj_align(lbl_datetime, LV_ALIGN_TOP_MID, 0, 160);
+    lv_obj_align(lbl_datetime, LV_ALIGN_TOP_RIGHT, -15, 8);
 
     /* --- Two consent buttons --- */
     // "ยินยอมเป่า" button (green)
