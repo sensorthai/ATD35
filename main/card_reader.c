@@ -126,7 +126,6 @@ static void card_reader_task(void *arg)
             if (!collecting && is_license_start(s_rx_buf, len)) {
                 collecting = true;
                 total_len = 0;
-                ESP_LOGI(TAG, "Card swipe detected, collecting data...");
             }
 
             if (collecting) {
