@@ -248,13 +248,19 @@ void app_main(void)
     ESP_ERROR_CHECK(display_init());
 
     /* 5. Read time from DS1307 RTC if available */
+    bool rtc_valid = false;
     if (ds1307_is_present()) {
         struct tm rtc_time;
         if (ds1307_get_time(&rtc_time) == ESP_OK) {
-            time_t epoch = mktime(&rtc_time);
-            struct timeval tv = { .tv_sec = epoch, .tv_usec = 0 };
-            settimeofday(&tv, NULL);
-            ESP_LOGI(TAG, "System time synced from DS1307 RTC");
+            if (rtc_time.tm_year > 100) { // Year > 2000 is valid
+                time_t epoch = mktime(&rtc_time);
+                struct timeval tv = { .tv_sec = epoch, .tv_usec = 0 };
+                settimeofday(&tv, NULL);
+                ESP_LOGI(TAG, "System time synced from DS1307 RTC");
+                rtc_valid = true;
+            } else {
+                ESP_LOGW(TAG, "DS1307 time is invalid/uninitialized");
+            }
         }
     } else {
         ESP_LOGW(TAG, "DS1307 not found — using manual time setting");
@@ -265,8 +271,13 @@ void app_main(void)
     ui_scan_screen_create();
     ui_main_screen_create();
 
-    /* 7. Show time setting screen first */
-    ui_show_time_screen();
+    /* 7. Show scan screen or time setting screen */
+    if (rtc_valid) {
+        ESP_LOGI(TAG, "RTC time is valid. Skipping time setup screen.");
+        ui_show_scan_screen();
+    } else {
+        ui_show_time_screen();
+    }
 
     /* 8. Card reader init */
     card_reader_init();
