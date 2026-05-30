@@ -367,7 +367,7 @@ void ui_main_screen_create(void)
     lv_obj_set_style_text_font(lbl_datetime, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(lbl_datetime, C_TEXT, 0);
     lv_label_set_text(lbl_datetime, "--:--:--  --/--/----");
-    lv_obj_align(lbl_datetime, LV_ALIGN_TOP_RIGHT, -15, 8);
+    lv_obj_align(lbl_datetime, LV_ALIGN_BOTTOM_RIGHT, -15, -10);
 
     /* --- Two consent buttons --- */
     // "ยินยอมตรวจวัด" button (green)
