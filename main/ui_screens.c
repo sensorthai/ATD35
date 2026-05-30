@@ -352,14 +352,14 @@ void ui_main_screen_create(void)
     lbl_id_number = lv_label_create(id_card);
     lv_obj_set_style_text_font(lbl_id_number, &lv_font_montserrat_36, 0);
     lv_obj_set_style_text_color(lbl_id_number, C_TEXT, 0);
-    lv_label_set_text(lbl_id_number, "1521253654587");
+    lv_label_set_text(lbl_id_number, "-------------");
     lv_obj_align(lbl_id_number, LV_ALIGN_TOP_MID, 0, 22);
 
     /* Name label */
     lbl_name = lv_label_create(id_card);
     lv_obj_set_style_text_font(lbl_name, &lv_font_montserrat_20, 0);
     lv_obj_set_style_text_color(lbl_name, C_AMBER, 0);
-    lv_label_set_text(lbl_name, "AKARADEJ PONGPANIT");
+    lv_label_set_text(lbl_name, "-------------");
     lv_obj_align(lbl_name, LV_ALIGN_TOP_MID, 0, 65);
 
     /* --- Date/Time display --- */
