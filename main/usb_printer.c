@@ -69,6 +69,31 @@ void printer_host_task(void *arg)
         if (g_printer_dev.client_hdl) {
             usb_host_client_handle_events(g_printer_dev.client_hdl, pdMS_TO_TICKS(10));
         }
+
+        // Handle deferred device closure safely outside of the client callbacks
+        if (g_printer_dev.dev_close_pending) {
+            g_printer_dev.dev_close_pending = false;
+            ESP_LOGI(TAG, "Deferred cleanup: closing device...");
+            if (g_printer_dev.dev_hdl) {
+                if (g_printer_dev.intf_desc) {
+                    esp_err_t err = usb_host_interface_release(g_printer_dev.client_hdl, g_printer_dev.dev_hdl, g_printer_dev.intf_desc->bInterfaceNumber);
+                    if (err != ESP_OK) {
+                        ESP_LOGW(TAG, "usb_host_interface_release failed or not needed: %s", esp_err_to_name(err));
+                    }
+                    g_printer_dev.intf_desc = NULL;
+                }
+                esp_err_t err_close = usb_host_device_close(g_printer_dev.client_hdl, g_printer_dev.dev_hdl);
+                if (err_close != ESP_OK) {
+                    ESP_LOGE(TAG, "usb_host_device_close failed: %s", esp_err_to_name(err_close));
+                }
+                g_printer_dev.dev_hdl = NULL;
+            }
+            g_printer_dev.bulk_out_ep_addr = 0;
+            g_printer_dev.bulk_out_mps = 0;
+            g_printer_dev.bulk_in_ep_addr = 0;
+            g_printer_dev.bulk_in_mps = 0;
+            ESP_LOGI(TAG, "Deferred cleanup completed!");
+        }
     }
     vTaskDelete(NULL);
 }
@@ -132,6 +157,7 @@ static void client_event_cb(const usb_host_client_event_msg_t *event_msg, void *
         const usb_config_desc_t *cfg_desc;
         if (usb_host_get_active_config_descriptor(g_printer_dev.dev_hdl, &cfg_desc) != ESP_OK) {
             ESP_LOGE(TAG, "Failed to get config descriptor");
+            g_printer_dev.dev_close_pending = true;
             return;
         }
 
@@ -147,7 +173,7 @@ static void client_event_cb(const usb_host_client_event_msg_t *event_msg, void *
 
         if (!intf) {
             ESP_LOGW(TAG, "No USB Printer interface found on device (Class 0x07)");
-            usb_host_device_close(g_printer_dev.client_hdl, g_printer_dev.dev_hdl);
+            g_printer_dev.dev_close_pending = true;
             return;
         }
         g_printer_dev.intf_desc = intf;
@@ -176,7 +202,7 @@ static void client_event_cb(const usb_host_client_event_msg_t *event_msg, void *
         if (usb_host_interface_claim(g_printer_dev.client_hdl, g_printer_dev.dev_hdl,
                                      intf->bInterfaceNumber, intf->bAlternateSetting) != ESP_OK) {
             ESP_LOGE(TAG, "Failed to claim USB Printer interface");
-            usb_host_device_close(g_printer_dev.client_hdl, g_printer_dev.dev_hdl);
+            g_printer_dev.dev_close_pending = true;
             return;
         }
 
@@ -198,11 +224,7 @@ static void client_event_cb(const usb_host_client_event_msg_t *event_msg, void *
     } else if (event_msg->event == USB_HOST_CLIENT_EVENT_DEV_GONE) {
         ESP_LOGI(TAG, "USB Printer disconnected!");
         g_printer_dev.is_opened = false;
-
-        if (g_printer_dev.dev_hdl) {
-            usb_host_device_close(g_printer_dev.client_hdl, g_printer_dev.dev_hdl);
-            g_printer_dev.dev_hdl = NULL;
-        }
+        g_printer_dev.dev_close_pending = true;
 
         if (g_event_cb) {
             g_event_cb(PRINTER_EVENT_DISCONNECTED);

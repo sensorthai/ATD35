@@ -122,6 +122,10 @@ static void card_reader_task(void *arg)
         int len = uart_read_bytes(CARD_UART_PORT_NUM, s_rx_buf, CARD_BUF_SIZE - 1, pdMS_TO_TICKS(100));
 
         if (len > 0) {
+            /* Debug: print raw hex bytes */
+            ESP_LOGI(TAG, "RX %d bytes:", len);
+            ESP_LOG_BUFFER_HEX(TAG, s_rx_buf, len > 64 ? 64 : len);
+
             /* Check if this is the start of a new card swipe */
             if (!collecting && is_license_start(s_rx_buf, len)) {
                 collecting = true;
@@ -182,6 +186,10 @@ void card_reader_init(void)
                                   CARD_READER_RTS, CARD_READER_CTS));
 
     ESP_LOGI(TAG, "Card reader UART initialized (RXD=GPIO%d, baud=%d)", CARD_READER_RXD, CARD_UART_BAUD);
+
+    /* Invert RX signal for direct TTL connection (no MAX232) */
+    uart_set_line_inverse(CARD_UART_PORT_NUM, UART_SIGNAL_RXD_INV);
+    ESP_LOGI(TAG, "RX signal inverted for TTL direct connection");
 }
 
 void card_reader_start(void)

@@ -199,24 +199,116 @@ void ui_show_time_screen(void)
 }
 
 /* ========================================================================== */
-/*  Screen 2: "กรุณารูดใบขับขี่" Splash (3 seconds)                            */
+/*  Screen 2: "มีบัตรประชาชนหรือไม่?" (Ask ID Card)                            */
+/* ========================================================================== */
+static lv_obj_t *scr_ask_card = NULL;
+
+static void btn_has_card_event(lv_event_t *e)
+{
+    on_has_card_selected(true);
+}
+
+static void btn_no_card_event(lv_event_t *e)
+{
+    on_has_card_selected(false);
+}
+
+void ui_ask_card_screen_create(void)
+{
+    scr_ask_card = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(scr_ask_card, C_BG, 0);
+
+    /* Title: "มีใบอนุญาตขับรถหรือไม่?" */
+    lv_obj_t *title = lv_label_create(scr_ask_card);
+    lv_obj_set_style_text_font(title, &font_thai_24, 0);
+    lv_obj_set_style_text_color(title, C_AMBER, 0);
+    // "มีใบอนุญาตขับรถหรือไม่?"
+    lv_label_set_text(title,
+        "\xE0\xB8\xA1\xE0\xB8\xB5\xE0\xB9\x83\xE0\xB8\x9A\xE0\xB8\xAD\xE0\xB8\x99\xE0\xB8\xB8\xE0\xB8\x8D\xE0\xB8\xB2\xE0\xB8\x95"
+        "\xE0\xB8\x82\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\x96"
+        "\xE0\xB8\xAB\xE0\xB8\xA3\xE0\xB8\xB7\xE0\xB8\xAD\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88?");
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 30);
+
+    /* Card icon */
+    lv_obj_t *icon = lv_label_create(scr_ask_card);
+    lv_obj_set_style_text_font(icon, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_color(icon, C_AMBER, 0);
+    lv_label_set_text(icon, LV_SYMBOL_SD_CARD);
+    lv_obj_align(icon, LV_ALIGN_TOP_MID, 0, 70);
+
+    /* Button: "มีบัตรประชาชน" (Green) */
+    lv_obj_t *btn_yes = lv_btn_create(scr_ask_card);
+    lv_obj_set_size(btn_yes, 360, 65);
+    lv_obj_align(btn_yes, LV_ALIGN_CENTER, 0, 15);
+    lv_obj_set_style_bg_color(btn_yes, C_GREEN, 0);
+    lv_obj_set_style_radius(btn_yes, 14, 0);
+    lv_obj_add_event_cb(btn_yes, btn_has_card_event, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *lbl_yes = lv_label_create(btn_yes);
+    lv_obj_set_style_text_font(lbl_yes, &font_thai_24, 0);
+    lv_obj_set_style_text_color(lbl_yes, C_TEXT, 0);
+    // "มีใบอนุญาตขับรถ"
+    lv_label_set_text(lbl_yes,
+        "\xE0\xB8\xA1\xE0\xB8\xB5\xE0\xB9\x83\xE0\xB8\x9A\xE0\xB8\xAD\xE0\xB8\x99\xE0\xB8\xB8\xE0\xB8\x8D\xE0\xB8\xB2\xE0\xB8\x95"
+        "\xE0\xB8\x82\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\x96");
+    lv_obj_center(lbl_yes);
+
+    /* Button: "ไม่มีบัตรประชาชน" (Red) */
+    lv_obj_t *btn_no = lv_btn_create(scr_ask_card);
+    lv_obj_set_size(btn_no, 360, 65);
+    lv_obj_align(btn_no, LV_ALIGN_CENTER, 0, 100);
+    lv_obj_set_style_bg_color(btn_no, C_RED, 0);
+    lv_obj_set_style_radius(btn_no, 14, 0);
+    lv_obj_add_event_cb(btn_no, btn_no_card_event, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *lbl_no = lv_label_create(btn_no);
+    lv_obj_set_style_text_font(lbl_no, &font_thai_24, 0);
+    lv_obj_set_style_text_color(lbl_no, C_TEXT, 0);
+    // "ไม่มีใบอนุญาตขับรถ"
+    lv_label_set_text(lbl_no,
+        "\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88\xE0\xB8\xA1\xE0\xB8\xB5\xE0\xB9\x83\xE0\xB8\x9A\xE0\xB8\xAD\xE0\xB8\x99\xE0\xB8\xB8\xE0\xB8\x8D\xE0\xB8\xB2\xE0\xB8\x95"
+        "\xE0\xB8\x82\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\x96");
+    lv_obj_center(lbl_no);
+
+    /* Gear button (top-right) → go to time setting */
+    lv_obj_t *btn_gear = lv_btn_create(scr_ask_card);
+    lv_obj_set_size(btn_gear, 45, 45);
+    lv_obj_align(btn_gear, LV_ALIGN_TOP_RIGHT, -10, 8);
+    lv_obj_set_style_bg_color(btn_gear, C_BORDER, 0);
+    lv_obj_set_style_radius(btn_gear, 10, 0);
+    lv_obj_add_event_cb(btn_gear, (lv_event_cb_t)ui_show_time_screen, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *lbl_gear = lv_label_create(btn_gear);
+    lv_label_set_text(lbl_gear, LV_SYMBOL_SETTINGS);
+    lv_obj_center(lbl_gear);
+}
+
+void ui_show_ask_card_screen(void)
+{
+    display_lock();
+    lv_scr_load(scr_ask_card);
+    display_unlock();
+}
+
+/* ========================================================================== */
+/*  Screen 3: "กรุณารูดใบอนุญาตขับรถ" (wait for card swipe)            */
 /* ========================================================================== */
 static lv_obj_t *scr_scan = NULL;
-static lv_timer_t *scan_timer = NULL;
-
-static void scan_timer_cb(lv_timer_t *timer)
-{
-    if (scan_timer) {
-        lv_timer_del(scan_timer);
-        scan_timer = NULL;
-    }
-    ui_show_main_screen();
-}
 
 void ui_scan_screen_create(void)
 {
     scr_scan = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(scr_scan, C_BG, 0);
+
+    /* Back button (top-left) */
+    lv_obj_t *btn_back_scan = lv_btn_create(scr_scan);
+    lv_obj_set_size(btn_back_scan, 45, 35);
+    lv_obj_align(btn_back_scan, LV_ALIGN_TOP_LEFT, 5, 5);
+    lv_obj_set_style_bg_color(btn_back_scan, C_BORDER, 0);
+    lv_obj_set_style_radius(btn_back_scan, 8, 0);
+    lv_obj_add_event_cb(btn_back_scan, (lv_event_cb_t)ui_show_ask_card_screen, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *lbl_back_scan = lv_label_create(btn_back_scan);
+    lv_label_set_text(lbl_back_scan, LV_SYMBOL_LEFT);
+    lv_obj_center(lbl_back_scan);
 
     /* Card container */
     lv_obj_t *card = lv_obj_create(scr_scan);
@@ -235,11 +327,16 @@ void ui_scan_screen_create(void)
     lv_label_set_text(icon, LV_SYMBOL_SD_CARD);
     lv_obj_align(icon, LV_ALIGN_CENTER, 0, -30);
 
-    /* Thai text: "กรุณารูดใบขับขี่" */
+    /* Thai text: "กรุณารูดใบอนุญาตขับรถ" */
     lv_obj_t *lbl = lv_label_create(card);
     lv_obj_set_style_text_font(lbl, &font_thai_24, 0);
     lv_obj_set_style_text_color(lbl, C_TEXT, 0);
-    lv_label_set_text(lbl, "\xE0\xB8\x81\xE0\xB8\xA3\xE0\xB8\xB8\xE0\xB8\x93\xE0\xB8\xB2\xE0\xB8\xA3\xE0\xB8\xB9\xE0\xB8\x94\xE0\xB9\x83\xE0\xB8\x9A\xE0\xB8\x82\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\x82\xE0\xB8\xB5\xE0\xB9\x88");
+    // "กรุณารูดใบอนุญาตขับรถ"
+    lv_label_set_text(lbl,
+        "\xE0\xB8\x81\xE0\xB8\xA3\xE0\xB8\xB8\xE0\xB8\x93\xE0\xB8\xB2"
+        "\xE0\xB8\xA3\xE0\xB8\xB9\xE0\xB8\x94\xE0\xB9\x83\xE0\xB8\x9A"
+        "\xE0\xB8\xAD\xE0\xB8\x99\xE0\xB8\xB8\xE0\xB8\x8D\xE0\xB8\xB2\xE0\xB8\x95"
+        "\xE0\xB8\x82\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\x96");
     lv_obj_align(lbl, LV_ALIGN_CENTER, 0, 20);
 }
 
@@ -247,9 +344,7 @@ void ui_show_scan_screen(void)
 {
     display_lock();
     lv_scr_load(scr_scan);
-    /* Auto-transition to main screen after 3 seconds */
-    scan_timer = lv_timer_create(scan_timer_cb, 3000, NULL);
-    lv_timer_set_repeat_count(scan_timer, 1);
+    /* No auto-transition: waits for card swipe callback */
     display_unlock();
 }
 
@@ -381,8 +476,8 @@ void ui_main_screen_create(void)
     lv_obj_t *lbl_consent = lv_label_create(btn_consent);
     lv_obj_set_style_text_font(lbl_consent, &font_thai_24, 0);
     lv_obj_set_style_text_color(lbl_consent, C_TEXT, 0);
-    // "ยินยอมตรวจวัด"
-    lv_label_set_text(lbl_consent, "\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
+    // "ยินยอมตรวจวัด" (fixed spelling: added ว between ร and จ)
+    lv_label_set_text(lbl_consent, "\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\xA7\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
     lv_obj_center(lbl_consent);
 
     // "ไม่ยินยอมตรวจวัด" button (red)
@@ -396,8 +491,8 @@ void ui_main_screen_create(void)
     lv_obj_t *lbl_refuse = lv_label_create(btn_refuse);
     lv_obj_set_style_text_font(lbl_refuse, &font_thai_24, 0);
     lv_obj_set_style_text_color(lbl_refuse, C_TEXT, 0);
-    // "ไม่ยินยอมตรวจวัด"
-    lv_label_set_text(lbl_refuse, "\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
+    // "ไม่ยินยอมตรวจวัด" (fixed spelling: added ว between ร and จ)
+    lv_label_set_text(lbl_refuse, "\xE0\xB9\x84\xE0\xB8\xA1\xE0\xB9\x88\xE0\xB8\xA2\xE0\xB8\xB4\xE0\xB8\x99\xE0\xB8\xA2\xE0\xB8\xAD\xE0\xB8\xA1\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\xA7\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94");
     lv_obj_center(lbl_refuse);
 
     /* --- Message label --- */
@@ -423,6 +518,28 @@ void ui_main_screen_create(void)
 
     /* Start clock update timer (1 second) */
     clock_timer = lv_timer_create(clock_update_cb, 1000, NULL);
+
+    /* Back button (top-left) → go to ask-card */
+    lv_obj_t *btn_back_main = lv_btn_create(scr_main);
+    lv_obj_set_size(btn_back_main, 45, 35);
+    lv_obj_align(btn_back_main, LV_ALIGN_TOP_LEFT, 5, 5);
+    lv_obj_set_style_bg_color(btn_back_main, C_BORDER, 0);
+    lv_obj_set_style_radius(btn_back_main, 8, 0);
+    lv_obj_add_event_cb(btn_back_main, (lv_event_cb_t)ui_show_ask_card_screen, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *lbl_back_main = lv_label_create(btn_back_main);
+    lv_label_set_text(lbl_back_main, LV_SYMBOL_LEFT);
+    lv_obj_center(lbl_back_main);
+
+    /* Gear button (top-right) → go to time setting */
+    lv_obj_t *btn_gear_main = lv_btn_create(scr_main);
+    lv_obj_set_size(btn_gear_main, 45, 35);
+    lv_obj_align(btn_gear_main, LV_ALIGN_TOP_RIGHT, -5, 5);
+    lv_obj_set_style_bg_color(btn_gear_main, C_BORDER, 0);
+    lv_obj_set_style_radius(btn_gear_main, 8, 0);
+    lv_obj_add_event_cb(btn_gear_main, (lv_event_cb_t)ui_show_time_screen, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *lbl_gear_main = lv_label_create(btn_gear_main);
+    lv_label_set_text(lbl_gear_main, LV_SYMBOL_SETTINGS);
+    lv_obj_center(lbl_gear_main);
 }
 
 void ui_show_main_screen(void)
@@ -467,5 +584,62 @@ void ui_update_name(const char *name)
     if (lbl_name) {
         lv_label_set_text(lbl_name, name);
     }
+    display_unlock();
+}
+
+/* ========================================================================== */
+/*  Screen 5: Print Confirm Screen                                             */
+/* ========================================================================== */
+static lv_obj_t *scr_confirm = NULL;
+
+static void btn_confirm_ok_event(lv_event_t *e)
+{
+    ui_show_ask_card_screen();
+}
+
+void ui_confirm_screen_create(void)
+{
+    scr_confirm = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(scr_confirm, C_BG, 0);
+
+    /* Success icon */
+    lv_obj_t *icon = lv_label_create(scr_confirm);
+    lv_obj_set_style_text_font(icon, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_color(icon, C_GREEN, 0);
+    lv_label_set_text(icon, LV_SYMBOL_OK);
+    lv_obj_align(icon, LV_ALIGN_CENTER, 0, -60);
+
+    /* Message: "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e1c\u0e25\u0e15\u0e23\u0e27\u0e08\u0e27\u0e31\u0e14\u0e40\u0e23\u0e35\u0e22\u0e1a\u0e23\u0e49\u0e2d\u0e22" */
+    lv_obj_t *lbl_msg = lv_label_create(scr_confirm);
+    lv_obj_set_style_text_font(lbl_msg, &font_thai_24, 0);
+    lv_obj_set_style_text_color(lbl_msg, C_TEXT, 0);
+    // "\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e1c\u0e25\u0e15\u0e23\u0e27\u0e08\u0e27\u0e31\u0e14\u0e40\u0e23\u0e35\u0e22\u0e1a\u0e23\u0e49\u0e2d\u0e22"
+    lv_label_set_text(lbl_msg,
+        "\xE0\xB8\x9E\xE0\xB8\xB4\xE0\xB8\xA1\xE0\xB8\x9E\xE0\xB9\x8C"
+        "\xE0\xB8\x9C\xE0\xB8\xA5\xE0\xB8\x95\xE0\xB8\xA3\xE0\xB8\xA7\xE0\xB8\x88\xE0\xB8\xA7\xE0\xB8\xB1\xE0\xB8\x94"
+        "\xE0\xB9\x80\xE0\xB8\xA3\xE0\xB8\xB5\xE0\xB8\xA2\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB9\x89\xE0\xB8\xAD\xE0\xB8\xA2");
+    lv_obj_align(lbl_msg, LV_ALIGN_CENTER, 0, 0);
+
+    /* OK Button: "\u0e15\u0e01\u0e25\u0e07" */
+    lv_obj_t *btn_ok = lv_btn_create(scr_confirm);
+    lv_obj_set_size(btn_ok, 200, 55);
+    lv_obj_align(btn_ok, LV_ALIGN_CENTER, 0, 70);
+    lv_obj_set_style_bg_color(btn_ok, C_GREEN, 0);
+    lv_obj_set_style_radius(btn_ok, 14, 0);
+    lv_obj_add_event_cb(btn_ok, btn_confirm_ok_event, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *lbl_ok = lv_label_create(btn_ok);
+    lv_obj_set_style_text_font(lbl_ok, &font_thai_24, 0);
+    lv_obj_set_style_text_color(lbl_ok, C_TEXT, 0);
+    // "\u0e15\u0e01\u0e25\u0e07"
+    lv_label_set_text(lbl_ok,
+        "\xE0\xB8\x95\xE0\xB8\x81\xE0\xB8\xA5\xE0\xB8\x87");
+    lv_obj_center(lbl_ok);
+}
+
+void ui_show_confirm_screen(void)
+{
+    display_lock();
+    lv_scr_load(scr_confirm);
     display_unlock();
 }

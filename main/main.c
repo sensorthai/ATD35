@@ -22,6 +22,9 @@
 static const char *TAG = "main";
 static QueueHandle_t printer_event_queue = NULL;
 
+/* State: does the current subject have an ID card? */
+static bool s_has_id_card = false;
+
 /* ID from card reader (mutable, updated when card is swiped) */
 static char s_id_number[16] = "-------------";
 static char s_full_name[128] = "-------------";
@@ -55,18 +58,44 @@ void on_time_confirmed(struct tm *t)
     setenv("TZ", "ICT-7", 1);
     tzset();
 
-    /* Switch to scan license screen (3 sec splash, then main) */
-    ui_show_scan_screen();
+    /* Switch to ask-card screen */
+    ui_show_ask_card_screen();
+}
+
+/* ========================================================================== */
+/*  Card Selection Callback                                                    */
+/* ========================================================================== */
+void on_has_card_selected(bool has_card)
+{
+    s_has_id_card = has_card;
+    ESP_LOGI(TAG, "Card selection: %s", has_card ? "HAS card" : "NO card");
+
+    if (has_card) {
+        /* Reset ID fields, wait for real card swipe */
+        strcpy(s_id_number, "-------------");
+        strcpy(s_full_name, "-------------");
+        ui_update_id_number(s_id_number);
+        ui_update_name(s_full_name);
+        ui_show_scan_screen(); /* Wait for card swipe callback */
+    } else {
+        /* No card — set placeholder text */
+        strcpy(s_id_number, "-");
+        strcpy(s_full_name, "-");
+        ui_update_id_number(s_id_number);
+        ui_update_name(s_full_name);
+        ui_show_main_screen(); /* Skip scan, go direct to main */
+    }
 }
 
 /* ========================================================================== */
 /*  Print Slip Tasks                                                           */
 /* ========================================================================== */
 
-/* Format A: ยินยอมเป่า */
+/* Format A: ยินยอมเป่า (has_card=true → Report 1, has_card=false → Report 3) */
 static void print_format_a_task(void *arg)
 {
-    ESP_LOGI(TAG, "Printing Format A (consent)...");
+    bool has_card = s_has_id_card;
+    ESP_LOGI(TAG, "Printing Format A (consent, card=%s)...", has_card ? "YES" : "NO");
     ui_show_temporary_message("Printing...", lv_palette_main(LV_PALETTE_AMBER), 5000);
 
     uint8_t *buf = malloc(4096);
@@ -89,18 +118,36 @@ static void print_format_a_task(void *arg)
     esc_pos_select_code_page(buf, &len, 26);
     esc_pos_align(buf, &len, ALIGN_LEFT);
     esc_pos_style(buf, &len, STYLE_NORMAL);
+    esc_pos_text(buf, &len, "******************************");
+      esc_pos_cut(buf, &len);
 
+     esc_pos_feed(buf, &len, 1);
     esc_pos_thai_text(buf, &len, "รายงานผลการตรวจวัดปริมาณแอลกอฮอล์");
     esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด : ");
-    esc_pos_text(buf, &len, s_id_number);
-    esc_pos_feed(buf, &len, 1);
+    /* ID card section — different for has-card vs no-card */
+    if (has_card) {
+        esc_pos_thai_text(buf, &len, "เลขใบอนุญาตขับรถผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_text(buf, &len, s_id_number);
+      esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
-    esc_pos_thai_text(buf, &len, s_full_name);
-    esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_feed(buf, &len, 2);
+    } else {
+        esc_pos_thai_text(buf, &len, "เลขใบอนุญาตขับรถผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "(ไม่มีใบอนุญาตขับรถ)");
+        esc_pos_feed(buf, &len, 2);
 
+        esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "(ไม่มีใบอนุญาตขับรถ)");
+        esc_pos_feed(buf, &len, 2);
+    }
+    esc_pos_feed(buf, &len, 2);
     esc_pos_thai_text(buf, &len, "วันที่ : ");
     esc_pos_text(buf, &len, date_str);
     esc_pos_feed(buf, &len, 1);
@@ -109,66 +156,20 @@ static void print_format_a_task(void *arg)
     esc_pos_text(buf, &len, time_str);
     esc_pos_feed(buf, &len, 1);
 
-    esc_pos_feed(buf, &len, 1);
 
-    esc_pos_thai_text(buf, &len, "เครื่องตรวจวัดแอลกอฮอล์");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "รุ่น: แอลโคควอนท์ 6020+");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "เฟิร์มแวร์: R1.59A TH-LT");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "047.004");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "T-WL 1.02");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "หมายเลขเครื่อง: A447059");
-    esc_pos_feed(buf, &len, 1);
-
+  
     esc_pos_text(buf, &len, "******************************");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด: ");
-    esc_pos_thai_text(buf, &len, s_full_name);
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ตรวจวัด: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ผลการตรวจวัด: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "1 mg%");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ประเภทยานพาหนะ: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "หมายเลขทะเบียน: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "สถานที่: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ถูกตรวจวัด: ");
     esc_pos_feed(buf, &len, 2);
-
-    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ตรวจวัด: ");
-    esc_pos_feed(buf, &len, 2);
-
-    esc_pos_thai_text(buf, &len, "หมายเหตุ: ");
+     esc_pos_thai_text(buf, &len, "ผู้ถูกตรวจวัด ");
     esc_pos_feed(buf, &len, 1);
-
-    esc_pos_feed(buf, &len, 3);
-    esc_pos_cut(buf, &len);
-
+    esc_pos_text(buf, &len, "**** ");
+    esc_pos_thai_text(buf, &len, "ยอมรับการตรวจวัด");
+    esc_pos_text(buf, &len, " ****");
+    esc_pos_feed(buf, &len, 2);
+       esc_pos_cut(buf, &len);
     esp_err_t ret = printer_send_data(buf, len);
     if (ret == ESP_OK) {
-        ESP_LOGI(TAG, "Format A printed OK");
+        ESP_LOGI(TAG, "Format A printed OK (card=%s)", has_card ? "YES" : "NO");
         ui_show_temporary_message("Success!", lv_palette_main(LV_PALETTE_GREEN), 2000);
     } else {
         ESP_LOGE(TAG, "Print failed: %s", esp_err_to_name(ret));
@@ -176,13 +177,18 @@ static void print_format_a_task(void *arg)
     }
 
     free(buf);
+
+    /* Show confirm screen after printing */
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    ui_show_confirm_screen();
     vTaskDelete(NULL);
 }
 
-/* Format B: ไม่ยินยอม */
+/* Format B: ไม่ยินยอม (has_card=true → Report 2, has_card=false → Report 4) */
 static void print_format_b_task(void *arg)
 {
-    ESP_LOGI(TAG, "Printing Format B (refuse)...");
+    bool has_card = s_has_id_card;
+    ESP_LOGI(TAG, "Printing Format B (refuse, card=%s)...", has_card ? "YES" : "NO");
     ui_show_temporary_message("Printing...", lv_palette_main(LV_PALETTE_AMBER), 5000);
 
     uint8_t *buf = malloc(4096);
@@ -206,20 +212,39 @@ static void print_format_b_task(void *arg)
     esc_pos_align(buf, &len, ALIGN_LEFT);
     esc_pos_style(buf, &len, STYLE_NORMAL);
 
+      esc_pos_cut(buf, &len);
+    esc_pos_text(buf, &len, "******************************");
+     esc_pos_feed(buf, &len, 1);
     esc_pos_thai_text(buf, &len, "รายงานผลการตรวจวัดปริมาณแอลกอฮอล์");
-    esc_pos_feed(buf, &len, 1);
+    esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "เลขบัตรประชาชนผู้ถูกตรวจวัด : ");
-    esc_pos_text(buf, &len, s_id_number);
-    esc_pos_feed(buf, &len, 1);
+    /* ID card section — different for has-card vs no-card */
+    if (has_card) {
+        esc_pos_thai_text(buf, &len, "เลขใบอนุญาตขับรถผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_text(buf, &len, s_id_number);
+    esc_pos_feed(buf, &len, 2);
 
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
-    esc_pos_thai_text(buf, &len, s_full_name);
-    esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+         esc_pos_feed(buf, &len, 1);
+         esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_feed(buf, &len, 2);
+    } else {
+        esc_pos_thai_text(buf, &len, "เลขใบอนุญาตขับรถผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "(ไม่มีใบอนุญาตขับรถ)");
+        esc_pos_feed(buf, &len, 2);
+
+        esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด : ");
+        esc_pos_feed(buf, &len, 1);
+        esc_pos_thai_text(buf, &len, "(ไม่มีใบอนุญาตขับรถ)");
+        esc_pos_feed(buf, &len, 2);
+    }
 
     esc_pos_thai_text(buf, &len, "ผู้ถูกตรวจวัด ");
+        esc_pos_feed(buf, &len, 1);
     esc_pos_text(buf, &len, "**** ");
-    esc_pos_thai_text(buf, &len, "ไม่ยินยอมตรวจวัด");
+    esc_pos_thai_text(buf, &len, "ปฏิเสธการตรวจวัด");
     esc_pos_text(buf, &len, " ****");
     esc_pos_feed(buf, &len, 2);
 
@@ -232,65 +257,33 @@ static void print_format_b_task(void *arg)
     esc_pos_feed(buf, &len, 1);
 
     esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "เครื่องตรวจวัดแอลกอฮอล์");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "รุ่น: แอลโคควอนท์ 6020+");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "เฟิร์มแวร์: R1.59A TH-LT");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "047.004");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "T-WL 1.02");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "หมายเลขเครื่อง: A447059");
-    esc_pos_feed(buf, &len, 1);
-
     esc_pos_text(buf, &len, "******************************");
+    esc_pos_feed(buf, &len, 6);
+
+    esc_pos_text(buf, &len, "................................");
     esc_pos_feed(buf, &len, 1);
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด:");
+    esc_pos_feed(buf, &len, 6);
 
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ถูกตรวจวัด: ");
-    esc_pos_thai_text(buf, &len, s_full_name);
+    esc_pos_text(buf, &len, "................................");
     esc_pos_feed(buf, &len, 1);
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ถูกตรวจวัด:");
+    esc_pos_feed(buf, &len, 6);
 
-    esc_pos_thai_text(buf, &len, "ชื่อผู้ตรวจวัด: ");
+    esc_pos_text(buf, &len, "................................");
     esc_pos_feed(buf, &len, 1);
+    esc_pos_thai_text(buf, &len, "ชื่อผู้ตรวจวัด:");
+    esc_pos_feed(buf, &len, 6);
 
-    esc_pos_thai_text(buf, &len, "ผลการตรวจวัด: ");
+    esc_pos_text(buf, &len, "................................");
     esc_pos_feed(buf, &len, 1);
-
-    esc_pos_text(buf, &len, "1 mg%");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ประเภทยานพาหนะ: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "หมายเลขทะเบียน: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "สถานที่: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ถูกตรวจวัด: ");
-    esc_pos_feed(buf, &len, 2);
-
-    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ตรวจวัด: ");
-    esc_pos_feed(buf, &len, 2);
-
-    esc_pos_thai_text(buf, &len, "หมายเหตุ: ");
-    esc_pos_feed(buf, &len, 1);
-
-    esc_pos_feed(buf, &len, 3);
+    esc_pos_thai_text(buf, &len, "ลายเซ็นต์ผู้ตรวจวัด");
+    esc_pos_feed(buf, &len, 4);
     esc_pos_cut(buf, &len);
 
     esp_err_t ret = printer_send_data(buf, len);
     if (ret == ESP_OK) {
-        ESP_LOGI(TAG, "Format B printed OK");
+        ESP_LOGI(TAG, "Format B printed OK (card=%s)", has_card ? "YES" : "NO");
         ui_show_temporary_message("Success!", lv_palette_main(LV_PALETTE_GREEN), 2000);
     } else {
         ESP_LOGE(TAG, "Print failed: %s", esp_err_to_name(ret));
@@ -298,6 +291,10 @@ static void print_format_b_task(void *arg)
     }
 
     free(buf);
+
+    /* Show confirm screen after printing */
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    ui_show_confirm_screen();
     vTaskDelete(NULL);
 }
 
@@ -389,13 +386,15 @@ void app_main(void)
 
     /* 6. Create UI screens */
     ui_time_screen_create();
+    ui_ask_card_screen_create();
     ui_scan_screen_create();
     ui_main_screen_create();
+    ui_confirm_screen_create();
 
-    /* 7. Show scan screen or time setting screen */
+    /* 7. Show ask-card screen or time setting screen */
     if (rtc_valid) {
-        ESP_LOGI(TAG, "RTC time is valid. Skipping time setup screen.");
-        ui_show_scan_screen();
+        ESP_LOGI(TAG, "RTC time is valid. Showing card selection screen.");
+        ui_show_ask_card_screen();
     } else {
         ui_show_time_screen();
     }

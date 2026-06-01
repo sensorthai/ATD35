@@ -27,6 +27,7 @@ typedef struct {
     SemaphoreHandle_t tx_mutex;
     bool is_opened;
     bool busy;
+    bool dev_close_pending;
 } printer_dev_t;
 
 extern printer_dev_t g_printer_dev;
